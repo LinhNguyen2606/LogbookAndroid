@@ -1,117 +1,81 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- * @flow strict-local
- */
+import React, {useState} from 'react';
+import {Image, Button, View, Text} from 'react-native';
 
-import React from 'react';
-import type {Node} from 'react';
-import {
-  SafeAreaView,
-  ScrollView,
-  StatusBar,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+const App = () => {
+  const [imageIndex, setImageIndex] = useState(0);
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+  const imagesList = [
+    'https://miluxinh.com/wp-content/uploads/2020/09/cho-poodle-co-may-loai.jpg',
+    'https://cdn.tgdd.vn/Files/2021/04/15/1343612/tim-hieu-giong-cho-poodle-nguon-goc-dac-diem-cach-nuoi-bang-gia-202104151447536289.jpg',
+  ];
 
-/* $FlowFixMe[missing-local-annot] The type annotation(s) required by Flow's
- * LTI update could not be added via codemod */
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
+  const forwardBtn = () => {
+    if (imageIndex > imagesList.length - 2) {
+      setImageIndex(0);
+    } else {
+      setImageIndex(prev => imageIndex + 1);
+    }
+  };
 
-const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+  const backwardBtn = () => {
+    if (imageIndex < imagesList.length - 1) {
+      setImageIndex(imagesList.length - 1);
+    } else {
+      setImageIndex(prev => imageIndex - 1);
+    }
   };
 
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <Header />
+    <>
+      <View>
+        <Text
+          style={{
+            textAlign: 'center',
+            backgroundColor: '#156dc3',
+            padding: 20,
+            color: 'white',
+            fontWeight: 'bold',
+            fontSize: 18,
+          }}>
+          Pictures
+        </Text>
+
+        <Image
+          style={{
+            height: 200,
+            width: 300,
+            marginTop: 80,
+            marginBottom: 0,
+            marginLeft: 45,
+            padding: 5,
+            objectFit: 'cover',
+            backgroundPosition: 'center center',
+            backgroundRepeat: 'no-repeat',
+            backgroundSize: 'cover',
+            borderradius: 8,
+            border: '1 solid #ddd',
+            transition: 'width 2s',
+          }}
+          source={{uri: imagesList[imageIndex]}}
+        />
         <View
           style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
+            display: 'flex',
+            position: 'relative',
+            bottom: 120,
+            width: '95%',
+            left: 16,
+            right: 40,
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
           }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.js</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
+          <Button title="Before" onPress={backwardBtn} />
+          <Button title="Next" onPress={forwardBtn} />
         </View>
-      </ScrollView>
-    </SafeAreaView>
+      </View>
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
-  },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
-  },
-});
 
 export default App;
