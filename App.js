@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   Image,
   Button,
@@ -8,6 +8,9 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import {openDatabase} from 'react-native-sqlite-storage';
+
+var db = openDatabase({name: 'LogBookDatabase.db'});
 
 const App = () => {
   const [imageIndex, setImageIndex] = useState(0);
@@ -30,11 +33,62 @@ const App = () => {
     }
   };
 
-  const handleSubmitBtn = () => {
-    newArray.push(url);
-    setUrl('');
-    Alert.alert('URL has been added');
+  useEffect(() => {
+    db.transaction(function (txn) {
+      txn.executeSql(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='logBookAndroid'",
+        [],
+        function (tx, res) {
+          console.log('item:', res.rows.length);
+          if (res.rows.length == 0) {
+            txn.executeSql('DROP TABLE IF EXISTS logBookAndroid', []);
+            txn.executeSql(
+              'CREATE TABLE IF NOT EXISTS logBookAndroid(id INTEGER PRIMARY KEY AUTOINCREMENT, image_url VARCHAR(255))',
+              [],
+            );
+          }
+        },
+      );
+    });
+  }, []);
+
+  const insertImage = () => {
+    if (url.match(/(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/g) === null) {
+      Alert.alert('Image url is invalid!');
+      return;
+    } else {
+      db.transaction(function (tx) {
+        tx.executeSql(
+          'INSERT INTO logBookAndroid (image_url) VALUES (?)',
+          [url],
+          (tx, results) => {
+            console.log('Results', results.rowsAffected);
+            if (results.rowsAffected > 0) {
+              Alert.alert('Image Inserted Successfully....');
+            } else Alert.alert('Failed....');
+          },
+        );
+      });
+      handleSubmitBtn();
+    }
   };
+
+  const handleSubmitBtn = () => {
+    db.transaction(tx => {
+      tx.executeSql('SELECT * FROM logBookAndroid', [], (tx, results) => {
+        var temp = [];
+        for (let i = 0; i < results.rows.length; ++i)
+          temp.push(results.rows.item(i));
+        setUrl('');
+        setNewArray(temp);
+        console.log(temp);
+      });
+    });
+  };
+
+  useEffect(() => {
+    handleSubmitBtn();
+  }, []);
 
   return (
     <>
@@ -67,7 +121,7 @@ const App = () => {
             placeholder="Enter URL..."
           />
           <View style={{width: '90%', marginLeft: 20}}>
-            <Button title="Upload image" onPress={handleSubmitBtn}></Button>
+            <Button title="Upload image" onPress={insertImage}></Button>
           </View>
         </SafeAreaView>
 
@@ -91,7 +145,7 @@ const App = () => {
               backgroundSize: 'cover',
               borderRadius: 10,
             }}
-            source={{uri: newArray[imageIndex]}}
+            source={{uri: newArray[imageIndex].image_url}}
           />
         )}
 
