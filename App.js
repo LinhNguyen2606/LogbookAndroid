@@ -7,7 +7,9 @@ import {
   SafeAreaView,
   TextInput,
   Alert,
+  PermissionsAndroid,
 } from 'react-native';
+import {launchCamera} from 'react-native-image-picker';
 import {openDatabase} from 'react-native-sqlite-storage';
 
 var db = openDatabase({name: 'LogBookDatabase.db'});
@@ -50,6 +52,8 @@ const App = () => {
         },
       );
     });
+    handleSubmitBtn();
+    requestPermission();
   }, []);
 
   const insertImage = () => {
@@ -86,9 +90,63 @@ const App = () => {
     });
   };
 
-  useEffect(() => {
+  const requestPermission = async () => {
+    try {
+      const grantedCamera = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.CAMERA,
+        {
+          title: 'Cool Photo App Camera Permission',
+          message:
+            'Cool Photo App needs access to your camera ' +
+            'so you can take awesome pictures.',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      const grantedGallery = await PermissionsAndroid.request(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+        {
+          title: 'Cool Photo App Photo Permission',
+          message:
+            'Cool Photo App needs access to your camera ' +
+            'so you can take awesome pictures.',
+          buttonNegative: 'Cancel',
+          buttonPositive: 'OK',
+        },
+      );
+      if (
+        grantedCamera === PermissionsAndroid.RESULTS.GRANTED &&
+        grantedGallery === PermissionsAndroid.RESULTS.GRANTED
+      ) {
+        console.log('You can use the camera');
+      } else {
+        console.log('Camera permission denied');
+      }
+    } catch (err) {
+      console.warn(err);
+    }
+  };
+
+  const openCamera = async () => {
+    const result = await launchCamera({
+      includeBase64: true,
+      saveToPhotos: true,
+    });
+    db.transaction(function (tx) {
+      tx.executeSql(
+        'INSERT INTO logBookAndroid (image_url) VALUES (?)',
+        ['data:image/jpg;base64,' + result.assets[0].base64],
+        (tx, results) => {
+          console.log('Results', results.rowsAffected);
+          if (results.rowsAffected > 0) {
+            Alert.alert('Image Inserted Successfully....');
+          } else Alert.alert('Failed....');
+        },
+      );
+    });
     handleSubmitBtn();
-  }, []);
+    console.log(result);
+  };
 
   return (
     <>
@@ -163,6 +221,9 @@ const App = () => {
           }}>
           <Button title="Before" onPress={backwardBtn} />
           <Button title="Next" onPress={forwardBtn} />
+        </View>
+        <View style={{width: '90%', marginLeft: 20}}>
+          <Button title="Take a picture" onPress={openCamera}></Button>
         </View>
       </View>
     </>
